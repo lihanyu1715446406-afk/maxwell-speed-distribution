@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>麦克斯韦速率分布 · 交互式拓展</title>
+<style>
+  :root{
+    --bg:#f2f6fb;
+    --surface:#ffffff;
+    --ink:#0d1b2a;
+    --muted:#5b6b7f;
+    --line:#dfe8f3;
+    --navy:#081c31;
+    --navy-2:#0b2b48;
+    --blue:#1f6feb;
+    --blue-deep:#0b4fbe;
+    --teal:#0ca678;
+    --orange:#f76707;
+    --red:#d6336c;
+    --violet:#7c4dff;
+    --radius:22px;
+    --shadow:0 12px 34px rgba(13,36,64,.08);
+    --shadow-lg:0 24px 60px rgba(7,26,45,.18);
+    --font:"Segoe UI","Microsoft YaHei UI","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+    --math:"Cambria Math","Cambria","Times New Roman",serif;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:var(--font);
+    color:var(--ink);
+    background:
+      radial-gradient(900px 480px at 90% -80px, rgba(31,111,235,.10), transparent 60%),
+      radial-gradient(700px 420px at -10% 30%, rgba(12,166,120,.07), transparent 60%),
+      var(--bg);
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    font-variant-numeric:tabular-nums;
+  }
+  ::selection{background:rgba(31,111,235,.22)}
+
+  /* ---------- 顶栏 ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:60;
+    background:rgba(7,26,45,.86);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .topbar-inner{
+    max-width:1180px;margin:0 auto;padding:0 24px;height:60px;
+    display:flex;align-items:center;justify-content:space-between;gap:24px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:700;font-size:.9rem;letter-spacing:.03em;white-space:nowrap}
+  .brand .pulse{
+    width:9px;height:9px;border-radius:50%;
+    background:linear-gradient(135deg,#54a0ff,#0ca678);
+    box-shadow:0 0 12px rgba(84,160,255,.9);
+  }
+  .nav-links{display:flex;gap:26px}
+  .nav-links a{color:rgba(255,255,255,.66);text-decoration:none;font-size:.82rem;transition:color .2s}
+  .nav-links a:hover{color:#fff}
+
+  /* ---------- 首屏 ---------- */
+  .hero{
+    position:relative;overflow:hidden;color:#fff;
+    background:
+      radial-gradient(1100px 520px at 82% -8%, #144a7a 0%, transparent 62%),
+      linear-gradient(158deg,#061726 0%,#0a2743 52%,#092238 100%);
+    padding:76px 24px 96px;
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(120,180,255,.045) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(120,180,255,.045) 1px,transparent 1px);
+    background-size:64px 64px;
+    mask-image:linear-gradient(180deg,rgba(0,0,0,.7),transparent 88%);
+    -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.7),transparent 88%);
+    pointer-events:none;
+  }
+  .hero-wave{position:absolute;left:0;right:0;bottom:-2px;width:100%;height:190px;opacity:.55;pointer-events:none}
+  .hero-inner{
+    position:relative;z-index:2;max-width:1180px;margin:0 auto;
+    display:grid;grid-template-columns:1.15fr .85fr;gap:52px;align-items:center;
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:.74rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:#7fb6ff;margin:0 0 14px;
+  }
+  .eyebrow::before{content:"";width:22px;height:1px;background:currentColor;opacity:.8}
+  .hero h1{
+    margin:0 0 18px;font-size:clamp(2rem,4vw,3.2rem);line-height:1.14;
+    letter-spacing:-.02em;font-weight:800;
+    background:linear-gradient(120deg,#ffffff 20%,#b9d6ff 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hero-sub{color:rgba(224,238,255,.76);font-size:1.02rem;max-width:560px;margin:0 0 24px}
+  .hero-sub b{color:#fff;font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+  .chips span{
+    font-size:.76rem;color:#bcd7f5;border:1px solid rgba(140,190,255,.22);
+    background:rgba(120,180,255,.08);border-radius:999px;padding:5px 12px;
+  }
+  .hero-actions{display:flex;flex-wrap:wrap;gap:12px}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border:0;border-radius:12px;padding:12px 20px;cursor:pointer;
+    font-family:var(--font);font-size:.9rem;font-weight:700;text-decoration:none;
+    transition:transform .18s,box-shadow .18s,background .18s;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn-primary{background:linear-gradient(135deg,#2f7cf6,#1454b8);color:#fff;box-shadow:0 12px 28px rgba(31,111,235,.35)}
+  .btn-primary:hover{box-shadow:0 16px 36px rgba(31,111,235,.45)}
+  .btn-ghost{background:rgba(255,255,255,.06);color:#dbe9fa;border:1px solid rgba(160,200,255,.24)}
+  .btn-ghost:hover{background:rgba(255,255,255,.1)}
+  .btn-block{width:100%}
+  .btn-light{background:rgba(140,190,255,.12);color:#d9ebff;border:1px solid rgba(140,190,255,.22)}
+  .btn-light:hover{background:rgba(140,190,255,.2)}
+
+  .glass-card{
+    position:relative;
+    background:linear-gradient(160deg,rgba(255,255,255,.085),rgba(255,255,255,.035));
+    border:1px solid rgba(160,200,255,.2);
+    border-radius:24px;padding:26px 26px 22px;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    box-shadow:0 30px 70px rgba(2,10,20,.38), inset 0 1px 0 rgba(255,255,255,.14);
+  }
+  .glass-label{font-size:.68rem;letter-spacing:.2em;color:#7fb6ff;font-weight:700;text-transform:uppercase;margin-bottom:12px}
+  .hero-formula{
+    font-family:var(--math);font-size:clamp(1.15rem,2vw,1.5rem);line-height:2.2;
+    color:#f4f9ff;white-space:nowrap;overflow-x:auto;padding-bottom:2px;
+  }
+  .hfrac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 4px;font-size:.92em}
+  .hfrac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 6px}
+  .hfrac>span:last-child{padding:0 6px}
+  .hero-formula sup{font-size:.68em}
+  .glass-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 14px}
+  .glass-grid div{background:rgba(255,255,255,.045);border:1px solid rgba(160,200,255,.1);border-radius:11px;padding:9px 11px}
+  .glass-grid small{display:block;font-size:.65rem;color:#8fb0d2;letter-spacing:.06em;margin-bottom:1px}
+  .glass-grid b{font-size:.86rem;color:#eaf4ff;font-weight:600}
+  .glass-note{font-size:.8rem;color:#a9c4e2;margin:0;border-top:1px solid rgba(160,200,255,.13);padding-top:14px}
+  .glass-note b{color:#fff}
+
+  /* ---------- 通用版式 ---------- */
+  .section{max-width:1180px;margin:0 auto;padding:76px 24px 6px}
+  section[id]{scroll-margin-top:76px}
+  .section-head{max-width:780px;margin-bottom:30px}
+  .section-head .eyebrow{color:var(--blue)}
+  .section-head .eyebrow::before{background:var(--blue)}
+  h2{margin:6px 0 10px;font-size:clamp(1.55rem,3vw,2.25rem);line-height:1.24;letter-spacing:-.015em;font-weight:800}
+  .lead{color:var(--muted);font-size:.98rem;margin:0;max-width:720px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+  /* ---------- 交互实验 ---------- */
+  .lab-card{display:grid;grid-template-columns:302px minmax(0,1fr);gap:28px;padding:26px}
+  .controls{display:flex;flex-direction:column;gap:20px;min-width:0}
+  .control-group{display:flex;flex-direction:column;gap:9px}
+  .control-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .control-head label,.control-head>span:first-child{font-size:.82rem;font-weight:700;color:#31465e}
+  .value-pill{
+    font-size:.78rem;font-weight:700;color:var(--blue);background:#eaf2ff;
+    border-radius:8px;padding:2px 9px;white-space:nowrap;
+  }
+  .value-pill.red{color:var(--red);background:#fdebf2}
+  input[type=range]{
+    --pct:50%;--accent:var(--blue);
+    -webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;
+    background:linear-gradient(90deg,var(--accent) var(--pct),#e4ecf6 var(--pct));
+    outline:none;cursor:pointer;margin:3px 0;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+    background:#fff;border:3px solid var(--accent);
+    box-shadow:0 2px 8px rgba(13,36,64,.28);cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--accent);
+    box-shadow:0 2px 8px rgba(13,36,64,.28);cursor:pointer;
+  }
+  input[type=range]:disabled{cursor:not-allowed;opacity:.5}
+  .range-red{--accent:var(--red)!important}
+  .preset-row{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{
+    border:1px solid var(--line);background:#f8fbff;color:#4a5f77;
+    border-radius:8px;padding:5px 9px;font-size:.74rem;font-weight:600;cursor:pointer;
+    font-family:var(--font);transition:.16s;
+  }
+  .chip:hover{border-color:#b9d2f2;color:var(--blue);background:#f1f7ff}
+  .chip-demo{color:var(--blue);border-color:#c7dcfa;background:#eef5ff}
+  .chip-demo.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  select{
+    width:100%;appearance:none;border:1px solid var(--line);background:#f8fbff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235b6b7f' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+    border-radius:10px;padding:10px 34px 10px 12px;font-family:var(--font);font-size:.88rem;color:var(--ink);cursor:pointer;
+  }
+  select:focus{outline:2px solid rgba(31,111,235,.3);border-color:var(--blue)}
+  .custom-mass{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+  .custom-mass .mini{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted)}
+  .seg{display:flex;background:#eef3fa;border-radius:11px;padding:4px;gap:4px}
+  .seg button{
+    flex:1;border:0;background:transparent;color:var(--muted);font-family:var(--font);
+    font-size:.78rem;font-weight:700;padding:8px 4px;border-radius:8px;cursor:pointer;transition:.16s;
+  }
+  .seg button.active{background:#fff;color:var(--navy);box-shadow:0 2px 8px rgba(13,36,64,.12)}
+  .switches{display:flex;flex-direction:column;gap:11px;padding-top:2px}
+  .switch{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.82rem;font-weight:600;color:#31465e;user-select:none}
+  .switch input{
+    -webkit-appearance:none;appearance:none;width:42px;height:24px;border-radius:99px;
+    background:#dbe5f1;position:relative;transition:background .18s;cursor:pointer;flex:0 0 auto;margin:0;
+  }
+  .switch input::after{
+    content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.22);transition:transform .18s;
+  }
+  .switch input:checked{background:var(--blue)}
+  .switch input:checked::after{transform:translateX(18px)}
+  .switch input:focus-visible{outline:2px solid rgba(31,111,235,.4);outline-offset:2px}
+  .threshold{background:#fff7fa;border:1px solid #f7dbe6;border-radius:13px;padding:12px;gap:8px;transition:.2s}
+  .threshold.is-off{background:#f8fafc;border-color:var(--line);opacity:.62}
+  .tail-line{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:.74rem;color:#7a5a68}
+  .tail-line b{font-size:.96rem;color:var(--red);font-variant-numeric:tabular-nums}
+  .chart-panel{min-width:0;display:flex;flex-direction:column}
+  .chart-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+  .chart-title-row h3{margin:0;font-size:1rem;font-weight:800;letter-spacing:-.01em}
+  .state-chip{font-size:.74rem;font-weight:700;color:var(--blue);background:#eef5ff;border:1px solid #d8e7fb;border-radius:999px;padding:3px 11px;white-space:nowrap}
+  .chart-wrap{position:relative;height:398px;min-width:0}
+  #mainChart{width:100%;height:100%;display:block;border-radius:14px}
+  .legend{display:flex;flex-wrap:wrap;gap:7px 16px;margin-top:12px;font-size:.79rem;color:var(--muted)}
+  .legend .item{display:inline-flex;align-items:center;gap:6px}
+  .legend .swatch{width:19px;height:3px;border-radius:3px;display:inline-block}
+  .marker-legend{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:10px;font-size:.75rem;color:var(--muted)}
+  .mk{display:inline-flex;align-items:center;gap:5px;background:#f7faff;border:1px solid #e5eef9;border-radius:7px;padding:2px 8px}
+  .mk i{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .mk b{color:#31465e;font-weight:700}
+  .chart-hint{margin:9px 0 0;font-size:.74rem;color:#8a9bad}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+  .stat{background:linear-gradient(180deg,#f9fcff,#f4f9ff);border:1px solid #e3edf9;border-radius:13px;padding:11px 13px}
+  .stat .k{font-size:.7rem;color:var(--muted);letter-spacing:.02em;white-space:nowrap}
+  .stat .v{font-size:1.42rem;font-weight:800;letter-spacing:-.02em;color:var(--navy);line-height:1.3}
+  .stat .u{font-size:.68rem;color:#8a9bad;margin-left:3px;font-weight:600}
+  .stat .s{font-size:.66rem;color:#9aabbb}
+
+  /* ---------- 模拟 ---------- */
+  .sim-card{
+    background:
+      radial-gradient(800px 340px at 12% 0%, rgba(31,111,235,.18), transparent 60%),
+      linear-gradient(158deg,#061726,#0a2b49 62%,#092238);
+    border-radius:24px;padding:26px;color:#dce9f7;box-shadow:var(--shadow-lg);
+    border:1px solid rgba(120,180,255,.12);
+  }
+  .sim-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+  .sim-title{font-size:1rem;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+  .sim-title::before{content:"";width:7px;height:7px;border-radius:50%;background:#54ffb0;box-shadow:0 0 12px #54ffb0}
+  .sim-pills{display:flex;gap:8px;flex-wrap:wrap}
+  .sim-pills span{font-size:.72rem;color:#a8c4e0;background:rgba(140,190,255,.08);border:1px solid rgba(140,190,255,.16);border-radius:999px;padding:3px 11px}
+  .sim-grid{display:grid;grid-template-columns:1.42fr 1fr;gap:18px}
+  .sim-box{position:relative;height:352px;background:#04121f;border:1px solid rgba(120,180,255,.14);border-radius:16px;overflow:hidden}
+  .sim-box canvas{width:100%;height:100%;display:block}
+  .sim-badge{
+    position:absolute;top:11px;left:12px;font-size:.71rem;color:#a8c4e0;
+    background:rgba(4,18,31,.72);border:1px solid rgba(120,180,255,.15);
+    border-radius:8px;padding:3px 9px;backdrop-filter:blur(4px);
+  }
+  .sim-side{display:flex;flex-direction:column;gap:11px;min-width:0}
+  .hist-wrap{height:212px;background:#04121f;border:1px solid rgba(120,180,255,.14);border-radius:16px;overflow:hidden}
+  .hist-wrap canvas{width:100%;height:100%;display:block}
+  .sim-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .sim-stat{background:rgba(255,255,255,.04);border:1px solid rgba(120,180,255,.12);border-radius:11px;padding:8px 11px}
+  .sim-stat span{display:block;font-size:.65rem;color:#8fb0d2}
+  .sim-stat b{font-size:1.18rem;color:#eaf4ff;font-weight:800;letter-spacing:-.01em}
+  .sim-stat small{font-size:.65rem;color:#8fb0d2;margin-left:3px}
+  .sim-note{font-size:.77rem;color:#9db8d2;line-height:1.65;margin:0}
+  .sim-note b{color:#d9ebff;font-weight:600}
+
+  /* ---------- 推导 ---------- */
+  .derive-card{display:grid;grid-template-columns:268px minmax(0,1fr);gap:32px;padding:28px}
+  .step-side{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .step-side .side-label{font-size:.68rem;letter-spacing:.16em;color:#8a9bad;font-weight:700;text-transform:uppercase}
+  .step-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+  .step-list li{
+    display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border-radius:10px;
+    font-size:.8rem;color:#5b6b7f;cursor:pointer;transition:.16s;border:1px solid transparent;
+  }
+  .step-list li span{font-size:.66rem;font-weight:800;color:#a4b4c5;letter-spacing:.04em;padding-top:2px}
+  .step-list li:hover{background:#f6faff;color:var(--navy)}
+  .step-list li.active{background:#eef5ff;border-color:#d8e7fb;color:var(--blue-deep);font-weight:700}
+  .step-list li.active span{color:var(--blue)}
+  .step-progress{margin-top:auto;padding-top:12px}
+  .step-progress .bar{height:5px;background:#edf2f9;border-radius:99px;overflow:hidden}
+  .step-progress .bar i{display:block;height:100%;width:16.66%;background:linear-gradient(90deg,#2f7cf6,#0ca678);border-radius:inherit;transition:width .25s}
+  .step-progress .txt{display:flex;justify-content:space-between;font-size:.68rem;color:#8a9bad;margin-top:6px}
+  .step-content{min-width:0}
+  .step{display:none}
+  .step.active{display:block;animation:fadeUp .28s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .step h3{margin:0 0 6px;font-size:1.18rem;letter-spacing:-.01em}
+  .step .step-sub{color:var(--muted);font-size:.9rem;margin:0 0 16px}
+  .formula-box{
+    background:linear-gradient(180deg,#f7faff,#f2f8ff);border:1px solid #e1ecfa;
+    border-radius:14px;padding:14px 18px;overflow-x:auto;margin:0 0 14px;
+  }
+  .formula{font-family:var(--math);font-size:clamp(1.02rem,1.8vw,1.34rem);line-height:2.15;color:var(--navy);white-space:nowrap}
+  .formula .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 4px;font-size:.92em}
+  .formula .frac span:first-child{border-bottom:1.5px solid currentColor;padding:0 6px}
+  .formula .frac span:last-child{padding:0 6px}
+  .formula sup{font-size:.7em}
+  .formula .sqrt{display:inline-flex;align-items:flex-start;margin:0 2px}
+  .formula .sqrt::before{content:"√";font-size:1.12em;line-height:1.5;margin-right:1px}
+  .formula .sqrt>span{border-top:1.4px solid currentColor;padding:1px 4px 0;margin-top:.16em;line-height:1.55}
+  .note{color:var(--muted);font-size:.87rem;margin:0 0 10px}
+  .note b{color:#31465e}
+  .callout{
+    display:flex;gap:10px;background:#f2fbf8;border:1px solid #d5f0e7;border-radius:12px;
+    padding:11px 14px;font-size:.82rem;color:#2f6b5c;margin:12px 0 0;
+  }
+  .callout .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);margin-top:7px;flex:0 0 auto}
+  .shell-figure{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:10px 0 2px}
+  .shell-figure svg{width:230px;height:150px;flex:0 0 auto}
+  .shell-figure .cap{font-size:.78rem;color:var(--muted);max-width:270px}
+  .shell-figure .cap b{color:var(--navy)}
+  .step-nav-buttons{display:flex;align-items:center;gap:10px;margin-top:20px;flex-wrap:wrap}
+  .step-nav-buttons .btn{padding:9px 16px;font-size:.82rem;border-radius:10px}
+  .btn-plain{background:#f4f8fd;color:#3f556e;border:1px solid #dee9f5}
+  .btn-plain:hover{background:#eaf2fc}
+  .btn-plain:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .btn-step{background:var(--navy);color:#fff}
+  .btn-step:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .step-hint{font-size:.7rem;color:#9aabbb;margin-left:auto}
+  #decompCanvas{width:100%;height:220px;display:block;background:#fbfdff;border:1px solid #e6eef8;border-radius:12px}
+  .decomp-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.73rem;color:var(--muted);margin-top:8px}
+  .decomp-legend i{display:inline-block;width:16px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+  /* ---------- 三种速率 ---------- */
+  .speed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .speed-card{--c:var(--blue);background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .speed-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--c),transparent 85%)}
+  .speed-card .tag{font-size:.68rem;font-weight:800;letter-spacing:.12em;color:var(--c);text-transform:uppercase}
+  .speed-card h3{margin:6px 0 8px;font-size:1.02rem}
+  .speed-card .formula{font-size:1rem;white-space:normal;line-height:1.9}
+  .speed-card .live{margin-top:12px;font-size:1.75rem;font-weight:800;letter-spacing:-.02em;color:var(--navy)}
+  .speed-card .live small{font-size:.72rem;color:#8a9bad;font-weight:600;margin-left:4px}
+  .speed-card .desc{font-size:.76rem;color:var(--muted);margin:4px 0 0}
+  .speed-card .bar{height:8px;background:#eef3fa;border-radius:99px;overflow:hidden;margin-top:14px}
+  .speed-card .bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--c),color-mix(in srgb,var(--c) 45%,#fff));transition:width .3s}
+  .speed-card.c1{--c:#1f6feb}.speed-card.c2{--c:#0ca678}.speed-card.c3{--c:#f76707}
+  .ratio-note{margin-top:16px;background:#fff;border:1px dashed #cfe0f3;border-radius:14px;padding:15px 18px;font-size:.83rem;color:var(--muted);display:flex;gap:12px;align-items:flex-start}
+  .ratio-note b{color:var(--navy)}
+  .ratio-note .big{font-family:var(--math);font-size:1.02rem;color:var(--blue-deep);white-space:nowrap}
+
+  /* ---------- 应用 ---------- */
+  .app-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+  .app-card{
+    grid-column:span 2;background:#fff;border:1px solid var(--line);border-radius:20px;
+    padding:22px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:9px;
+    position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;
+  }
+  .app-card:hover{transform:translateY(-3px);box-shadow:0 18px 42px rgba(13,36,64,.12)}
+  .app-card:nth-child(4),.app-card:nth-child(5),.app-card:nth-child(6){grid-column:span 2}
+  .app-num{font-size:.66rem;font-weight:800;letter-spacing:.16em;color:var(--blue)}
+  .app-card h3{margin:0;font-size:1rem;letter-spacing:-.01em}
+  .app-card p{margin:0;font-size:.82rem;color:var(--muted)}
+  .app-card p b{color:#31465e}
+  .app-cta{margin-top:auto;padding-top:10px}
+  .app-cta .btn{padding:7px 12px;font-size:.74rem;border-radius:9px;background:#f3f8ff;color:var(--blue-deep);border:1px solid #dbe9fb}
+  .app-cta .btn:hover{background:#e9f3ff}
+  .app-tag{display:inline-flex;align-items:center;gap:6px;font-size:.68rem;color:#7a8da1;background:#f7fafd;border:1px solid #e6eef7;border-radius:99px;padding:2px 9px;align-self:flex-start}
+  .iso-canvas{width:100%;height:132px;display:block;background:#fbfdff;border:1px solid #e6eef8;border-radius:11px;margin:4px 0 2px}
+  .iso-legend{display:flex;gap:14px;font-size:.7rem;color:var(--muted)}
+  .iso-legend i{width:14px;height:3px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+  /* ---------- 过程留痕 ---------- */
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:26px}
+  .flow-item{background:#fff;border:1px solid var(--line);border-radius:13px;padding:13px 14px}
+  .flow-item span{font-size:.64rem;font-weight:800;letter-spacing:.14em;color:var(--blue)}
+  .flow-item b{display:block;font-size:.86rem;margin-top:3px}
+  .flow-item small{display:block;font-size:.7rem;color:var(--muted);margin-top:2px}
+  .timeline{position:relative;padding-left:38px;margin-top:6px}
+  .timeline::before{content:"";position:absolute;left:11px;top:8px;bottom:10px;width:2px;background:linear-gradient(180deg,#2f7cf6,#0ca678 55%,#dfe8f3)}
+  .tl-item{position:relative;margin-bottom:18px}
+  .tl-item::before{
+    content:"";position:absolute;left:-33px;top:20px;width:12px;height:12px;border-radius:50%;
+    background:#fff;border:3px solid var(--blue);box-shadow:0 0 0 4px rgba(31,111,235,.1);
+  }
+  .tl-item:nth-child(4)::before,.tl-item:nth-child(5)::before{border-color:var(--teal);box-shadow:0 0 0 4px rgba(12,166,120,.1)}
+  .tl-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:0 6px 20px rgba(13,36,64,.05)}
+  .tl-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+  .ver{font-size:.68rem;font-weight:800;letter-spacing:.08em;color:#fff;background:var(--blue);border-radius:6px;padding:2px 8px}
+  .tl-item:nth-child(4) .ver,.tl-item:nth-child(5) .ver{background:var(--teal)}
+  .tl-head h3{margin:0;font-size:.98rem}
+  .tl-meta{font-size:.7rem;color:#94a5b7;margin-left:auto}
+  .tl-card p{margin:4px 0 8px;font-size:.84rem;color:var(--muted)}
+  .tl-tags{display:flex;flex-direction:column;gap:5px;font-size:.78rem;color:#42566d}
+  .tl-tags div{display:flex;gap:8px;align-items:flex-start}
+  .tl-tags b{flex:0 0 auto;font-size:.66rem;font-weight:800;border-radius:5px;padding:1px 7px;margin-top:2px}
+  .tag-problem{color:#b4355f;background:#fdebf2}
+  .tag-fix{color:#087f5b;background:#e6f7f1}
+  .tag-result{color:#1c5fb0;background:#eaf2ff}
+  .tl-card details{margin-top:10px;border-top:1px solid #eef3f9;padding-top:9px}
+  .tl-card summary{font-size:.75rem;color:var(--blue);cursor:pointer;font-weight:600;list-style:none}
+  .tl-card summary::-webkit-details-marker{display:none}
+  .tl-card summary::before{content:"＋ ";color:var(--blue)}
+  .tl-card details[open] summary::before{content:"－ "}
+  .prompt{
+    margin:8px 0 0;background:#f7faff;border:1px solid #e5eef9;border-radius:9px;
+    padding:10px 12px;font-size:.76rem;color:#4a5f77;line-height:1.6;font-family:var(--font);
+  }
+  .prompt b{color:var(--blue-deep)}
+  .verify{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px}
+  .verify-item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:.79rem;color:var(--muted);display:flex;gap:9px}
+  .verify-item .ok{color:var(--teal);font-weight:800;flex:0 0 auto}
+  .verify-item b{color:#31465e}
+
+  /* ---------- 页脚 ---------- */
+  footer{margin-top:80px;background:linear-gradient(160deg,#061726,#0a2743);color:#8fb0d2;padding:38px 24px;text-align:center;font-size:.78rem}
+  footer b{color:#e4f0ff}
+  footer .foot-line{margin-top:6px;font-size:.7rem;color:#6f8fae}
+
+  @media (max-width:1020px){
+    .hero-inner{grid-template-columns:1fr;gap:32px}
+    .glass-card{max-width:640px}
+    .lab-card{grid-template-columns:1fr}
+    .controls{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px;align-items:start}
+    .controls .btn-block{grid-column:1/-1}
+    .sim-grid{grid-template-columns:1fr}
+    .sim-box{height:300px}
+    .hist-wrap{height:230px}
+    .derive-card{grid-template-columns:1fr;gap:20px}
+    .step-list{flex-direction:row;overflow-x:auto;padding-bottom:4px;gap:6px}
+    .step-list li{white-space:nowrap;padding:7px 10px}
+    .step-list li span{display:none}
+    .step-progress{margin-top:0}
+    .speed-grid{grid-template-columns:1fr}
+    .app-grid{grid-template-columns:repeat(2,1fr)}
+    .app-card,.app-card:nth-child(4),.app-card:nth-child(5),.app-card:nth-child(6){grid-column:span 1}
+    .flow{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:720px){
+    .nav-links{display:none}
+    .hero{padding:58px 18px 74px}
+    .hero h1{font-size:clamp(1.8rem,7.2vw,2.6rem)}
+    .section{padding:58px 16px 2px}
+    .lab-card{padding:18px;gap:20px}
+    .controls{grid-template-columns:1fr}
+    .chart-wrap{height:330px}
+    .stats{grid-template-columns:1fr 1fr}
+    .sim-card{padding:18px}
+    .sim-box{height:250px}
+    .app-grid{grid-template-columns:1fr}
+    .verify{grid-template-columns:1fr}
+    .timeline{padding-left:32px}
+    .tl-item::before{left:-27px}
+    .tl-meta{margin-left:0;width:100%}
+    .derive-card{padding:18px}
+    .hero-formula{font-size:.92rem}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="pulse"></span>M-BOLTZMANN · 麦克斯韦速率分布</div>
+    <nav class="nav-links">
+      <a href="#lab">交互实验</a>
+      <a href="#sim">分子模拟</a>
+      <a href="#derive">公式推导</a>
+      <a href="#speeds">三种速率</a>
+      <a href="#apps">应用</a>
+      <a href="#log">修订记录</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <svg class="hero-wave" viewBox="0 0 1440 190" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="wg" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#2f7cf6" stop-opacity="0"/>
+        <stop offset=".45" stop-color="#54a0ff" stop-opacity=".55"/>
+        <stop offset="1" stop-color="#0ca678" stop-opacity=".15"/>
+      </linearGradient>
+    </defs>
+    <path d="M-20 150 C 220 150 250 52 400 58 C 560 65 640 130 780 132 C 940 134 1000 38 1160 44 C 1290 49 1360 120 1460 128" fill="none" stroke="url(#wg)" stroke-width="2"/>
+    <path d="M-20 172 C 240 172 280 96 430 100 C 590 105 650 156 800 157 C 960 158 1030 84 1180 89 C 1310 93 1370 148 1460 152" fill="none" stroke="url(#wg)" stroke-width="1" opacity=".45"/>
+  </svg>
+  <div class="hero-inner">
+    <div>
+      <p class="eyebrow">第十章 · 拓展作业</p>
+      <h1>从一张思维导图，<br>到一个可交互的物理实验室</h1>
+      <p class="hero-sub">在原图“温度、分子质量影响速率分布”的基础上，补上<b>曲线推导</b>，用<b>编程与交互</b>把静态结论变成可以动手验证的实验：改温度、换气体、看分子、算尾部。</p>
+      <div class="chips">
+        <span>实时交互曲线</span>
+        <span>320 个分子统计模拟</span>
+        <span>6 步公式推导</span>
+        <span>5 个真实应用</span>
+        <span>单文件 · 离线可用</span>
+      </div>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#lab">开始实验 ↓</a>
+        <a class="btn btn-ghost" href="#log">查看修订记录</a>
+      </div>
+    </div>
+    <div class="glass-card">
+      <div class="glass-label">Maxwell Speed Distribution</div>
+      <div class="hero-formula">
+        f(v) = 4π <span class="hfrac"><span>m</span><span>2πkT</span></span><sup>3/2</sup> v<sup>2</sup> e<sup>−mv²/2kT</sup>
+      </div>
+      <div class="glass-grid">
+        <div><small>v</small><b>分子速率 (m/s)</b></div>
+        <div><small>m</small><b>分子质量 (kg)</b></div>
+        <div><small>k</small><b>1.380649×10⁻²³ J/K</b></div>
+        <div><small>T</small><b>热力学温度 (K)</b></div>
+      </div>
+      <p class="glass-note">温度决定分子运动的“<b>快慢程度</b>”，质量决定“<b>轻重缓急</b>”。下面每一个滑块，都会实时改变这条曲线。</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 01 交互实验 -->
+  <section class="section" id="lab">
+    <div class="section-head">
+      <p class="eyebrow">01 · 交互实验</p>
+      <h2>拖动一个滑块，看清 T 与 m 的作用</h2>
+      <p class="lead">原图用两张静态曲线说明了温度与质量的影响。这里把两条规律合成一个实时可调的实验：曲线、峰值位置、三种特征速率和尾部概率都会同步变化。</p>
+    </div>
+
+    <div class="lab-card card">
+      <aside class="controls">
+        <div class="control-group">
+          <div class="control-head">
+            <label for="temp">温度 T</label>
+            <span class="value-pill"><span id="tempOut">300</span> K</span>
+          </div>
+          <input id="temp" class="range" type="range" min="20" max="1500" step="1" value="300" aria-label="温度">
+          <div class="preset-row">
+            <button class="chip" data-temp="100">100 K</button>
+            <button class="chip" data-temp="300">300 K</button>
+            <button class="chip" data-temp="600">600 K</button>
+            <button class="chip" data-temp="1200">1200 K</button>
+            <button class="chip chip-demo" id="demoBtn">▶ 自动演示</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-head">
+            <label for="gas">气体 / 分子</label>
+            <span class="value-pill" id="massOut">28.0 g/mol</span>
+          </div>
+          <select id="gas" aria-label="选择气体">
+            <option value="H2">H₂ · 氢气</option>
+            <option value="He">He · 氦气</option>
+            <option value="H2O">H₂O · 水蒸气</option>
+            <option value="N2" selected>N₂ · 氮气</option>
+            <option value="O2">O₂ · 氧气</option>
+            <option value="CO2">CO₂ · 二氧化碳</option>
+            <option value="UF6">UF₆ · 六氟化铀</option>
+            <option value="custom">自定义摩尔质量</option>
+          </select>
+          <div class="custom-mass" id="customWrap" hidden>
+            <div class="mini"><span>摩尔质量 M</span><span id="customOut">32.0 g/mol</span></div>
+            <input id="customMass" class="range" type="range" min="1" max="400" step="0.5" value="32" aria-label="自定义摩尔质量">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-head"><span>对比模式</span></div>
+          <div class="seg" id="compareSeg">
+            <button data-mode="none" class="active">单条</button>
+            <button data-mode="temperature">温度对比</button>
+            <button data-mode="mass">质量对比</button>
+          </div>
+        </div>
+
+        <div class="control-group switches">
+          <label class="switch"><input type="checkbox" id="markers" checked><span>标注三种特征速率</span></label>
+          <label class="switch"><input type="checkbox" id="tail"><span>显示能量阈值尾部</span></label>
+        </div>
+
+        <div class="control-group threshold is-off" id="thresholdGroup">
+          <div class="control-head">
+            <label for="threshold">阈值能量 Eₐ</label>
+            <span class="value-pill red"><span id="thresholdOut">30</span> kJ/mol</span>
+          </div>
+          <input id="threshold" class="range range-red" type="range" min="1" max="150" step="1" value="30" disabled aria-label="阈值能量">
+          <div class="tail-line"><span>速率超过阈值的分子占比</span><b id="tailOut">—</b></div>
+        </div>
+
+        <button id="resetBtn" class="btn btn-ghost btn-block" style="color:#3f556e;border-color:#dbe6f2;background:#f8fbff">↺ 恢复初始状态</button>
+      </aside>
+
+      <div class="chart-panel">
+        <div class="chart-title-row">
+          <h3>麦克斯韦速率分布 f(v)</h3>
+          <span class="state-chip" id="chartState">N₂ · 300 K</span>
+        </div>
+        <div class="chart-wrap"><canvas id="mainChart" aria-label="麦克斯韦速率分布交互曲线"></canvas></div>
+        <div class="legend" id="legend"></div>
+        <div class="marker-legend" id="markerLegend"></div>
+        <p class="chart-hint">提示：把鼠标移到曲线上，可以读取任意速率对应的概率密度；面积表示分子占比。</p>
+        <div class="stats">
+          <div class="stat"><div class="k">最概然速率 vₚ</div><div class="v"><span id="statVp">422</span><span class="u">m/s</span></div><div class="s">曲线最高点</div></div>
+          <div class="stat"><div class="k">平均速率 v̄</div><div class="v"><span id="statVavg">476</span><span class="u">m/s</span></div><div class="s">所有分子速率平均</div></div>
+          <div class="stat"><div class="k">方均根速率 v<sub>rms</sub></div><div class="v"><span id="statVrms">517</span><span class="u">m/s</span></div><div class="s">对应平均动能</div></div>
+          <div class="stat"><div class="k">峰值 f(vₚ)</div><div class="v"><span id="statFpeak">0.00197</span><span class="u">s/m</span></div><div class="s">分布的峰高</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 模拟 -->
+  <section class="section" id="sim">
+    <div class="section-head">
+      <p class="eyebrow">02 · 统计模拟</p>
+      <h2>让 320 个分子替你做一次抽样</h2>
+      <p class="lead">单个分子的速率无法预测，但大量分子的速率分布是确定的。盒子里的每个点代表一个分子，颜色代表它的速率；右侧直方图会随着统计样本累积，逐渐逼近理论曲线。</p>
+    </div>
+
+    <div class="sim-card">
+      <div class="sim-head">
+        <div class="sim-title">分子运动 · 实时统计</div>
+        <div class="sim-pills">
+          <span id="simState">N₂ · 300 K</span>
+          <span id="simCount">样本 0</span>
+        </div>
+      </div>
+      <div class="sim-grid">
+        <div class="sim-box">
+          <canvas id="simCanvas" aria-label="分子运动模拟"></canvas>
+          <div class="sim-badge" id="simBadge">T = 300 K · N₂ · 320 个分子</div>
+        </div>
+        <div class="sim-side">
+          <div class="hist-wrap"><canvas id="histCanvas" aria-label="速率统计直方图"></canvas></div>
+          <div class="sim-stats">
+            <div class="sim-stat"><span>速率标准差 σ</span><b id="simSigma">297</b><small>m/s</small></div>
+            <div class="sim-stat"><span>累计样本</span><b id="simSamples">0</b></div>
+          </div>
+          <p class="sim-note">颜色由<b>蓝（慢）</b>到<b>橙（快）</b>。碰撞会不断重新分配分子速率，所以直方图会一边抖动一边向橙色理论曲线收敛——这正是“统计规律”的样子。</p>
+          <button id="simReset" class="btn btn-light">↺ 重置统计</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 推导 -->
+  <section class="section" id="derive">
+    <div class="section-head">
+      <p class="eyebrow">03 · 公式推导</p>
+      <h2>从“各向同性”到那条熟悉的曲线</h2>
+      <p class="lead">老师希望“推一下曲线体现出来的关系”。下面把 f(v) 的来历拆成 6 步：为什么是指数、指数里的常数从哪来、为什么多出一个 v²、峰值在哪里。</p>
+    </div>
+
+    <div class="derive-card card">
+      <div class="step-side">
+        <div class="side-label">推导路径</div>
+        <ol class="step-list" id="stepList">
+          <li data-go="0" class="active"><span>01</span>独立性 → 指数形式</li>
+          <li data-go="1"><span>02</span>用温度确定 α</li>
+          <li data-go="2"><span>03</span>归一化常数</li>
+          <li data-go="3"><span>04</span>球壳 → 速率分布</li>
+          <li data-go="4"><span>05</span>峰值与三种速率</li>
+          <li data-go="5"><span>06</span>曲线形状的由来</li>
+        </ol>
+        <div class="step-progress">
+          <div class="bar"><i id="stepBar"></i></div>
+          <div class="txt"><span id="stepNow">1</span><span>/ <span id="stepTotal">6</span></span></div>
+        </div>
+      </div>
+
+      <div class="step-content">
+        <article class="step active">
+          <h3>为什么分布函数一定带指数？</h3>
+          <p class="step-sub">平衡态 + 三个方向平权，是整条推导的起点。</p>
+          <div class="formula-box">
+            <div class="formula">f(v<sub>x</sub>,v<sub>y</sub>,v<sub>z</sub>) = g(v<sub>x</sub>)g(v<sub>y</sub>)g(v<sub>z</sub>)</div>
+            <div class="formula">= A e<sup>−α(v<sub>x</sub>²+v<sub>y</sub>²+v<sub>z</sub>²)</sup></div>
+          </div>
+          <p class="note">① 平衡态下，速度的三个分量<b>相互独立</b>，联合分布等于三个一维分布的乘积；② 空间各向同性，分布只能依赖 v²（旋转坐标系不该改变结果）。</p>
+          <p class="note">同时满足“乘积形式”与“只依赖平方和”的函数只有指数函数，于是每个分量都是高斯型：g(u) ∝ e<sup>−αu²</sup>。常数 α 暂时未知，下一步用温度把它定下来。</p>
+          <div class="callout"><span class="dot"></span><span>这一步没有涉及任何具体气体——指数形式是“独立 + 各向同性”的直接结果。</span></div>
+        </article>
+
+        <article class="step">
+          <h3>用温度确定 α</h3>
+          <p class="step-sub">温度是分子平均动能的度量，它决定分布的“宽度”。</p>
+          <div class="formula-box">
+            <div class="formula">⟨v<sub>x</sub>²⟩ = <span class="frac"><span>1</span><span>2α</span></span> &nbsp;,&nbsp; ⟨<span class="frac"><span>1</span><span>2</span></span>mv²⟩ = <span class="frac"><span>3</span><span>2</span></span>kT</div>
+            <div class="formula">⇒ &nbsp; α = <span class="frac"><span>m</span><span>2kT</span></span></div>
+          </div>
+          <p class="note">标准高斯分布 e<sup>−αu²</sup> 的方差为 1/(2α)，所以每个方向 ⟨v<sub>x</sub>²⟩ = 1/(2α)。能量均分定理给出 ⟨½mv²⟩ = 3/2·kT，而 v² 有三个分量，代入即得 α = m/2kT。</p>
+          <p class="note">质量 m 出现在分母：<b>同样的温度下，越重的分子速度分布越窄</b>；温度 T 出现在分子：<b>越热，分布越宽</b>。这与原图中“温度升高曲线变宽、质量增大曲线变窄”完全对应。</p>
+        </article>
+
+        <article class="step">
+          <h3>归一化常数 A</h3>
+          <p class="step-sub">所有分子的概率加起来必须等于 1。</p>
+          <div class="formula-box">
+            <div class="formula">1 = A ∫ e<sup>−αv²</sup> d³v = A (π/α)<sup>3/2</sup></div>
+            <div class="formula">⇒ &nbsp; A = (α/π)<sup>3/2</sup> = (m/2πkT)<sup>3/2</sup></div>
+          </div>
+          <p class="note">这里用到标准积分 ∫<sub>−∞</sub><sup>∞</sup> e<sup>−αx²</sup>dx = √(π/α)。三个方向各贡献一个 √(π/α)，乘起来就是 (π/α)<sup>3/2</sup>。</p>
+          <p class="note">至此，速度矢量在“速度空间”里的分布已经确定：f(v<sub>x</sub>,v<sub>y</sub>,v<sub>z</sub>) = (m/2πkT)<sup>3/2</sup> e<sup>−mv²/2kT</sup>。但我们要的是<b>速率</b> v 的分布，还需要把方向“积分掉”。</p>
+        </article>
+
+        <article class="step">
+          <h3>球壳：为什么多出一个 v²</h3>
+          <p class="step-sub">速率相同、方向不同的速度矢量，落在一个球面上。</p>
+          <div class="shell-figure">
+            <svg viewBox="0 0 240 160" role="img" aria-label="速度空间中的球壳示意">
+              <defs>
+                <radialGradient id="shellG" cx="42%" cy="38%" r="70%">
+                  <stop offset="0" stop-color="#dbeaff"/>
+                  <stop offset="1" stop-color="#eef6ff"/>
+                </radialGradient>
+              </defs>
+              <line x1="30" y1="128" x2="214" y2="128" stroke="#b9cbe0" stroke-width="1.2"/>
+              <line x1="120" y1="146" x2="120" y2="18" stroke="#b9cbe0" stroke-width="1.2"/>
+              <text x="218" y="132" font-size="10" fill="#7a8da1">v_x</text>
+              <text x="126" y="20" font-size="10" fill="#7a8da1">v_y</text>
+              <circle cx="120" cy="86" r="56" fill="url(#shellG)" stroke="#2f7cf6" stroke-width="1.4"/>
+              <circle cx="120" cy="86" r="63" fill="none" stroke="#2f7cf6" stroke-width="7" stroke-opacity=".16"/>
+              <line x1="120" y1="86" x2="164" y2="52" stroke="#0b4fbe" stroke-width="1.6" stroke-dasharray="4 3"/>
+              <circle cx="164" cy="52" r="2.6" fill="#0b4fbe"/>
+              <text x="138" y="60" font-size="10" fill="#0b4fbe">v</text>
+              <text x="171" y="48" font-size="9" fill="#d6336c">dv</text>
+              <circle cx="120" cy="86" r="2.4" fill="#f76707"/>
+            </svg>
+            <div class="cap">半径 v、厚度 dv 的球壳体积为 <b>4πv²dv</b>。速率从 v 到 v+dv 的分子，数量正比于这个球壳的体积。</div>
+          </div>
+          <div class="formula-box">
+            <div class="formula">f(v)dv = 4π (m/2πkT)<sup>3/2</sup> v²</div>
+            <div class="formula">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;× e<sup>−mv²/2kT</sup> dv</div>
+          </div>
+          <p class="note">把速度空间分布乘以球壳体积，就得到速率分布。多出来的 <b>v² 来自几何</b>：速率越大，对应的球壳越大，能容纳的方向越多。这解释了曲线为什么从 0 开始上升，而不是在 v = 0 处最高。</p>
+        </article>
+
+        <article class="step">
+          <h3>峰值与三种特征速率</h3>
+          <p class="step-sub">对 f(v) 求极值、求平均、求平方平均。</p>
+          <div class="formula-box">
+            <div class="formula">v<sub>p</sub> = <span class="sqrt"><span>2kT/m</span></span></div>
+            <div class="formula">v̄ = <span class="sqrt"><span>8kT/πm</span></span> = <span class="frac"><span>2</span><span>√π</span></span> v<sub>p</sub> ≈ 1.128 v<sub>p</sub></div>
+            <div class="formula">v<sub>rms</sub> = <span class="sqrt"><span>3kT/m</span></span> = <span class="sqrt"><span>3/2</span></span> v<sub>p</sub> ≈ 1.225 v<sub>p</sub></div>
+          </div>
+          <p class="note"><b>最概然速率 v<sub>p</sub></b>：令 df/dv = 0。指数外的 v² 与指数内的 e<sup>−mv²/2kT</sup> 竞争，极值出现在 v<sub>p</sub> = √(2kT/m)。</p>
+          <p class="note"><b>平均速率 v̄</b>：∫v f(v)dv = √(8kT/πm) = (2/√π)·v<sub>p</sub> ≈ 1.128 v<sub>p</sub>。</p>
+          <p class="note"><b>方均根速率 v<sub>rms</sub></b>：√⟨v²⟩ = √(3kT/m) ≈ 1.225 v<sub>p</sub>，它与平均动能直接对应：½m v<sub>rms</sub>² = 3/2·kT。</p>
+          <div class="callout"><span class="dot"></span><span>三者之比恒为 <b>1 : 1.128 : 1.225</b>，与温度、气体种类都无关。温度只让它们整体变大，质量只让它们整体变小。</span></div>
+        </article>
+
+        <article class="step">
+          <h3>曲线为什么长这样</h3>
+          <p class="step-sub">两股力量相乘：几何让曲线上升，能量让曲线下降。</p>
+          <canvas id="decompCanvas" aria-label="速率分布形状分解图"></canvas>
+          <div class="decomp-legend">
+            <span><i style="background:#7c4dff"></i>几何因子 v²</span>
+            <span><i style="background:#f76707"></i>能量因子 e<sup>−mv²/2kT</sup></span>
+            <span><i style="background:#0b4fbe"></i>两者乘积 f(v)</span>
+          </div>
+          <p class="note" style="margin-top:10px">低速端：e<sup>−mv²/2kT</sup> 接近 1，v² 很小，所以曲线从 0 缓慢上升；高速端：v² 继续增大，但指数因子迅速衰减，最终压倒 v²，曲线出现一条很长的<b>右侧拖尾</b>。</p>
+          <p class="note">这条拖尾不是数学细节，而是很多真实现象的来源：蒸发、化学反应、大气逃逸，都只靠尾部那一小撮高速分子。</p>
+        </article>
+
+        <div class="step-nav-buttons">
+          <button class="btn btn-plain" id="prevStep" disabled>← 上一步</button>
+          <button class="btn btn-step" id="nextStep">下一步 →</button>
+          <span class="step-hint">共 6 步 · 可点击左侧路径跳转</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 三种速率 -->
+  <section class="section" id="speeds">
+    <div class="section-head">
+      <p class="eyebrow">04 · 三种特征速率</p>
+      <h2>同一条曲线，三个“代表值”</h2>
+      <p class="lead">它们都正比于 √(T/M)，但系数不同。下面的数值与上方实验实时联动，可以边改温度边比较。</p>
+    </div>
+
+    <div class="speed-grid">
+      <div class="speed-card c1">
+        <div class="tag">Most probable</div>
+        <h3>最概然速率 vₚ</h3>
+        <div class="formula">v<sub>p</sub> = √(2kT/m)</div>
+        <div class="live"><span id="liveVp">422</span><small>m/s</small></div>
+        <p class="desc">曲线最高点对应的速率，出现概率最大。</p>
+        <div class="bar"><i style="width:81.65%"></i></div>
+      </div>
+      <div class="speed-card c2">
+        <div class="tag">Mean</div>
+        <h3>平均速率 v̄</h3>
+        <div class="formula">v̄ = √(8kT/πm) = 2v<sub>p</sub>/√π</div>
+        <div class="live"><span id="liveVavg">476</span><small>m/s</small></div>
+        <p class="desc">所有分子速率的算术平均，比 vₚ 大约 12.8%。</p>
+        <div class="bar"><i style="width:92.13%"></i></div>
+      </div>
+      <div class="speed-card c3">
+        <div class="tag">RMS</div>
+        <h3>方均根速率 v<sub>rms</sub></h3>
+        <div class="formula">v<sub>rms</sub> = √(3kT/m)</div>
+        <div class="live"><span id="liveVrms">517</span><small>m/s</small></div>
+        <p class="desc">平方再平均再开方，与平均动能直接对应，三者中最大。</p>
+        <div class="bar"><i style="width:100%"></i></div>
+      </div>
+    </div>
+    <div class="ratio-note">
+      <span class="big">vₚ : v̄ : v<sub>rms</sub> = 1 : 1.128 : 1.225</span>
+      <span>这个比例是常数，与温度、质量都无关。温度升高时三者一起增大（曲线右移、变宽、峰值降低）；分子变重时三者一起减小（曲线左移、变窄、峰值升高）。</span>
+    </div>
+  </section>
+
+  <!-- 05 应用 -->
+  <section class="section" id="apps">
+    <div class="section-head">
+      <p class="eyebrow">05 · 从曲线到真实世界</p>
+      <h2>那条向右拖尾的曲线，解释了很多事</h2>
+      <p class="lead">原图停在“温度与质量的影响”。再往前一步：分布的高速率尾部决定了哪些分子能蒸发、反应、逃逸，也决定了同位素分离为什么如此困难。</p>
+    </div>
+
+    <div class="app-grid">
+      <article class="app-card">
+        <div class="app-num">01 / EVAPORATION</div>
+        <h3>蒸发与沸腾</h3>
+        <p>只有速率足够大的分子才能挣脱液面。温度升高时，<b>高速尾部占比快速增加</b>，蒸发随之加快；留下的分子平均速率更低，所以蒸发会降温。占比虽小，但分子碰撞极其频繁，宏观蒸发仍然明显。</p>
+        <div class="app-cta"><button class="btn" data-scenario="evap">载入场景：373 K 水蒸气 →</button></div>
+      </article>
+
+      <article class="app-card">
+        <div class="app-num">02 / ISOTOPE</div>
+        <h3>同位素分离</h3>
+        <p>²³⁵UF₆ 与 ²³⁸UF₆ 的平均速率只差约 <b>0.43%</b>。两条分布几乎完全重合，所以气体扩散法必须把成千上万级串联起来，才能一点点放大差异。</p>
+        <canvas class="iso-canvas" id="isoCanvas" aria-label="两种六氟化铀的速率分布对比"></canvas>
+        <div class="iso-legend"><span><i style="background:#0ca678"></i>²³⁵UF₆</span><span><i style="background:#f76707"></i>²³⁸UF₆</span><span>右侧为峰位放大</span></div>
+      </article>
+
+      <article class="app-card">
+        <div class="app-num">03 / ATMOSPHERE</div>
+        <h3>大气逃逸</h3>
+        <p>氢和氦质量小、高速尾部占比大，更容易达到逃逸速度。地球大气中几乎没有游离的 H₂ 和 He，而质量更大的 N₂、O₂ 留了下来。</p>
+        <div class="app-cta"><button class="btn" data-scenario="atmosphere">载入场景：1000 K 氦气 →</button></div>
+      </article>
+
+      <article class="app-card">
+        <div class="app-num">04 / REACTION</div>
+        <h3>化学反应速率</h3>
+        <p>只有能量超过活化能的分子才能发生反应。温度略升，<b>尾部占比按指数增长</b>，这就是 Arrhenius 公式中反应速率对温度极其敏感的原因。</p>
+        <div class="app-cta"><button class="btn" data-scenario="reaction">载入场景：900 K · Eₐ = 50 kJ/mol →</button></div>
+      </article>
+
+      <article class="app-card">
+        <div class="app-num">05 / LOW TEMPERATURE</div>
+        <h3>低温物理</h3>
+        <p>vₚ ∝ √T。温度降到 50 K，分布整体左移、变窄，分子速率变得非常集中。激光冷却、稀薄气体实验都工作在这样的区间。</p>
+        <div class="app-cta"><button class="btn" data-scenario="cold">载入场景：50 K 氦气 →</button></div>
+      </article>
+
+      <article class="app-card">
+        <div class="app-num">06 / BIG PICTURE</div>
+        <h3>统计力学的入口</h3>
+        <p>麦克斯韦分布只处理平动速率；把同样的思路推广到能量，就得到玻尔兹曼分布。它把微观的随机运动，与宏观的温度、压强、反应速率连接起来。</p>
+        <div class="app-cta"><a class="btn" href="#derive" style="text-decoration:none">回到推导看一遍 →</a></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- 06 过程 -->
+  <section class="section" id="log">
+    <div class="section-head">
+      <p class="eyebrow">06 · 过程留痕</p>
+      <h2>一张图，五轮修订，以及 AI 参与的方式</h2>
+      <p class="lead">按要求保留“多次修订及完善过程”。每一轮都写清楚：发现了什么问题、怎么改、结果如何；提示词节选放在折叠区里，方便老师检查 AI 到底做了什么。</p>
+    </div>
+
+    <div class="flow">
+      <div class="flow-item"><span>STEP 01</span><b>需求拆解</b><small>把“推曲线 + 编程交互”拆成可交付功能</small></div>
+      <div class="flow-item"><span>STEP 02</span><b>AI 生成初稿</b><small>页面结构、公式排版、Canvas 代码</small></div>
+      <div class="flow-item"><span>STEP 03</span><b>批判与纠错</b><small>量纲、归一化、边界情况、视觉可读性</small></div>
+      <div class="flow-item"><span>STEP 04</span><b>迭代验证</b><small>浏览器实测、数值自检、移动端检查</small></div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-head"><span class="ver">V1</span><h3>复刻：先把思维导图变成网页</h3><span class="tl-meta">第 1 轮 · 静态页面</span></div>
+          <p>把原图里的定义、公式、两张曲线图和结论整理成网页版，先保证内容完整、公式正确。</p>
+          <div class="tl-tags">
+            <div><b class="tag-problem">问题</b><span>只是“电子化搬运”：曲线还是图片，不能改 T 和 m；也没有把“关系”推出来，不满足老师“编程 + 交互”的拓展要求。</span></div>
+            <div><b class="tag-fix">修改</b><span>把作业主线改成“一个可交互的速率分布实验室”，保留原图结论，但每一条都要能亲手验证。</span></div>
+            <div><b class="tag-result">结果</b><span>确定页面骨架：交互实验 → 分子模拟 → 公式推导 → 三种速率 → 应用 → 修订记录。</span></div>
+          </div>
+          <details><summary>AI 提示词节选</summary><div class="prompt">“这是一张麦克斯韦速率分布思维导图。请先把它转成网页结构，但不要停留在静态排版：围绕‘温度和分子质量如何改变曲线’设计可交互功能，用纯 HTML/CSS/JS 实现，不使用外部库。”</div></details>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-head"><span class="ver">V2</span><h3>交互：让曲线真正动起来</h3><span class="tl-meta">第 2 轮 · Canvas 曲线</span></div>
+          <p>用 Canvas 重绘分布曲线，加入温度滑块、气体选择、温度对比 / 质量对比、三种特征速率标注和悬停读数。</p>
+          <div class="tl-tags">
+            <div><b class="tag-problem">问题</b><span>初版把横轴写死为 0–2000 m/s，选 H₂ 或 He 时曲线被截断在右侧；特征速率的文字标签挤在峰值附近，互相遮挡。</span></div>
+            <div><b class="tag-fix">修改</b><span>横轴改为根据当前曲线的 v<sub>rms</sub> 自适应（并向上取整到合适刻度）；特征速率只在图上画竖线，数值统一放到图例；增加鼠标悬停十字线与读数。</span></div>
+            <div><b class="tag-result">结果</b><span>从 20 K 到 1500 K、从 H₂ 到 UF₆ 都能完整显示；峰值附近的标注不再重叠。</span></div>
+          </div>
+          <details><summary>AI 提示词节选</summary><div class="prompt">“请检查曲线的坐标范围逻辑：现在的 vmax 是常量，轻气体分布会被截断。改成按当前所有对比曲线的 v<sub>rms</sub> 自适应，并让刻度落在 1/2/2.5/5×10ⁿ 上。所有绘图在 devicePixelRatio 下保持清晰。”</div></details>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-head"><span class="ver">V3</span><h3>模拟：从一条曲线到一堆分子</h3><span class="tl-meta">第 3 轮 · 统计模拟</span></div>
+          <p>加入 320 个分子的运动模拟和实时统计直方图，用蒙特卡洛方法从麦克斯韦分布中抽取速度分量。</p>
+          <div class="tl-tags">
+            <div><b class="tag-problem">问题</b><span>初版每一帧都重新抽样速度，分子位置闪跳、颜色乱变；直方图用 320 个样本直接统计，抖动很大，看不出与理论曲线的关系。</span></div>
+            <div><b class="tag-fix">修改</b><span>速度只在温度 / 气体改变时重采样；每秒随机让一部分分子“碰撞”并重新分配速率；直方图持续累积样本，并提供“重置统计”按钮。</span></div>
+            <div><b class="tag-result">结果</b><span>画面稳定，直方图在几秒内逐渐贴合橙色理论曲线，直观展示“统计规律需要大量样本”。</span></div>
+          </div>
+          <details><summary>AI 提示词节选</summary><div class="prompt">“模拟里的粒子每一帧都在闪，帮我改成只在条件变化时重采样。再加一个随时间累积的直方图：横轴速率、纵轴概率密度，并叠加理论曲线；注意样本要归一化，不是简单计数。”</div></details>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-head"><span class="ver">V4</span><h3>推导：把“为什么”补上</h3><span class="tl-meta">第 4 轮 · 推导与应用</span></div>
+          <p>加入 6 步可点击推导、速度空间球壳示意图、形状分解图；新增能量阈值尾部、同位素放大图，以及 5 个真实应用场景。</p>
+          <div class="tl-tags">
+            <div><b class="tag-problem">问题</b><span>完整公式在手机宽度下溢出；阈值能量设得较大时，阈值线跑到图外；应用卡片只有文字，和交互实验脱节。</span></div>
+            <div><b class="tag-fix">修改</b><span>公式容器允许横向滚动并缩小字号；启用阈值时把阈值位置纳入横轴范围；给应用卡片加“载入场景”，一键把温度 / 气体 / 阈值同步到实验区。</span></div>
+            <div><b class="tag-result">结果</b><span>推导、应用与实验串成一条线：看到现象 → 调参数 → 回到公式 → 解释现象。</span></div>
+          </div>
+          <details><summary>AI 提示词节选</summary><div class="prompt">“请扮演严格的物理助教，逐条检查推导：速度空间球壳为什么是 4πv²dv、α 如何由能量均分定出、三种速率的系数是否正确。再检查代码里 f(v) 的单位和数值积分结果。”</div></details>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-head"><span class="ver">V5</span><h3>交付：离线、可读、可复现</h3><span class="tl-meta">第 5 轮 · 联调与验证</span></div>
+          <p>合并为单文件，无任何外部依赖；补齐响应式、键盘可达性、动画降级；把修订记录内置到页面，并做数值与跨视口自检。</p>
+          <div class="tl-tags">
+            <div><b class="tag-problem">问题</b><span>纵轴刻度的小数位不统一，纵轴标题与刻度挤在一起；手机端切换推导步骤后，当前项还在横向列表的屏幕外。</span></div>
+            <div><b class="tag-fix">修改</b><span>按峰值统一刻度小数位，把纵轴标题移到左上角；切换步骤时自动把当前项滚动到可视区域；检查两种视口。</span></div>
+            <div><b class="tag-result">结果</b><span>双击 HTML 即可离线运行；桌面与手机均可操作；公式、曲线、模拟三者数值一致。</span></div>
+          </div>
+          <details><summary>AI 提示词节选</summary><div class="prompt">“最后做一次交付前审查：去掉所有外部依赖，检查 390px 宽度下的布局；确认温度、质量、三种速率、阈值尾部概率的计算在边界值（20 K、1500 K、自定义质量 400）下不出现 NaN 或负值。”</div></details>
+        </div>
+      </div>
+    </div>
+
+    <div class="verify">
+      <div class="verify-item"><span class="ok">✓</span><span><b>归一化：</b>数值积分 ∫f(v)dv ≈ 1.0000，误差来自离散步长。</span></div>
+      <div class="verify-item"><span class="ok">✓</span><span><b>比例：</b>vₚ : v̄ : v<sub>rms</sub> = 1 : 1.128 : 1.225，与解析解一致。</span></div>
+      <div class="verify-item"><span class="ok">✓</span><span><b>量纲：</b>f(v) 的单位为 s/m；指数项 −mv²/2kT 无量纲。</span></div>
+      <div class="verify-item"><span class="ok">✓</span><span><b>极限：</b>T 增大曲线右移变宽、峰值降低；m 增大则相反。</span></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div><b>麦克斯韦速率分布 · 交互式拓展</b>　|　基于第十章思维导图延伸</div>
+  <div class="foot-line">以 AI 为工具完成，所有公式、数值与物理结论均经复核 · 单文件离线运行，无外部依赖</div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ================= 常量与状态 ================= */
+  var KB = 1.380649e-23;
+  var NA = 6.02214076e23;
+  var GASES = {
+    H2:  { label: 'H₂',  M: 2.016 },
+    He:  { label: 'He',  M: 4.003 },
+    H2O: { label: 'H₂O', M: 18.015 },
+    N2:  { label: 'N₂',  M: 28.014 },
+    O2:  { label: 'O₂',  M: 31.998 },
+    CO2: { label: 'CO₂', M: 44.010 },
+    UF6: { label: 'UF₆', M: 352.0 },
+    custom: { label: '自定义', M: 32 }
+  };
+  var state = {
+    T: 300,
+    gas: 'N2',
+    customMass: 32,
+    compare: 'none',
+    markers: true,
+    tail: false,
+    threshold: 30
+  };
+  var FONT = '"Segoe UI","Microsoft YaHei UI","PingFang SC","Microsoft YaHei",sans-serif';
+  var MATHFONT = '"Cambria Math","Cambria","Times New Roman",serif';
+
+  function $(id){ return document.getElementById(id); }
+  function molarMass(){ return state.gas === 'custom' ? state.customMass : GASES[state.gas].M; }
+  function massKg(){ return molarMass() * 1e-3 / NA; }
+  function gasName(){
+    if (state.gas === 'custom') return '自定义 ' + state.customMass.toFixed(1) + ' g/mol';
+    return GASES[state.gas].label;
+  }
+  function characteristic(T, m){
+    return {
+      vp: Math.sqrt(2 * KB * T / m),
+      vavg: Math.sqrt(8 * KB * T / (Math.PI * m)),
+      vrms: Math.sqrt(3 * KB * T / m),
+      sigma: Math.sqrt(KB * T / m)
+    };
+  }
+  function fMaxwell(v, T, m){
+    if (v < 0) return 0;
+    var a = m / (2 * Math.PI * KB * T);
+    return 4 * Math.PI * Math.pow(a, 1.5) * v * v * Math.exp(-m * v * v / (2 * KB * T));
+  }
+  function thresholdSpeed(){
+    return 1000 * Math.sqrt(2 * state.threshold / molarMass());
+  }
+  function tailProb(v0, T, m){
+    if (!isFinite(v0) || v0 <= 0) return 1;
+    var sigma = Math.sqrt(KB * T / m);
+    var upper = Math.max(v0, 9 * sigma);
+    if (v0 >= 9 * sigma) return 0;
+    var n = 2000, h = (upper - v0) / n;
+    var s = fMaxwell(v0, T, m) + fMaxwell(upper, T, m);
+    for (var i = 1; i < n; i++) s += fMaxwell(v0 + i * h, T, m) * (i % 2 ? 4 : 2);
+    var p = s * h / 3;
+    return Math.max(0, Math.min(1, p));
+  }
+  function niceCeil(x){
+    if (!(x > 0)) return 1;
+    var p = Math.pow(10, Math.floor(Math.log10(x)));
+    var n = x / p;
+    var m = n <= 1 ? 1 : n <= 1.5 ? 1.5 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 3 ? 3 : n <= 4 ? 4 : n <= 5 ? 5 : n <= 6 ? 6 : n <= 8 ? 8 : 10;
+    return m * p;
+  }
+  function niceStep(max, target){
+    var raw = max / target;
+    var p = Math.pow(10, Math.floor(Math.log10(raw)));
+    var n = raw / p;
+    var s = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10;
+    return s * p;
+  }
+  function fmtF(f){
+    if (f === 0) return '0';
+    var d = f >= 0.001 ? 4 : 6;
+    return f.toFixed(d).replace(/0+$/, '').replace(/\.$/, '');
+  }
+  function fmtPercent(p){
+    if (!(p > 0)) return '0%';
+    if (p >= 0.999999) return '≈100%';
+    if (p < 1e-6) return (p * 100).toExponential(2) + '%';
+    if (p < 0.001) return (p * 100).toFixed(4) + '%';
+    if (p < 0.1) return (p * 100).toFixed(2) + '%';
+    return (p * 100).toFixed(1) + '%';
+  }
+  function clamp(x, a, b){ return x < a ? a : x > b ? b : x; }
+  function updateSliderFill(el){
+    var min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
+    var pct = ((val - min) / (max - min) * 100).toFixed(2) + '%';
+    el.style.setProperty('--pct', pct);
+  }
+
+  /* ================= Canvas 基础 ================= */
+  function fitCanvas(canvas){
+    var r = canvas.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = Math.max(1, Math.round(r.width * dpr));
+    var h = Math.max(1, Math.round(r.height * dpr));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx: ctx, w: r.width, h: r.height };
+  }
+  function roundRect(ctx, x, y, w, h, r){
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  /* ================= 主曲线 ================= */
+  var mainCanvas = $('mainChart');
+  var hover = null;
+  var geo = null;
+
+  function getCurves(){
+    var m = massKg();
+    var cur = { T: state.T, m: m, label: gasName() + ' · ' + state.T + ' K', color: '#0b4fbe', current: true };
+    if (state.compare === 'temperature') {
+      var temps = [100, 300, 600, 1200];
+      var tcol = ['#8ab4f8', '#4c8dff', '#1f6feb', '#0b4fbe'];
+      var arr = temps.map(function(T, i){
+        return { T: T, m: m, label: 'T = ' + T + ' K', color: tcol[i], current: Math.abs(T - state.T) < 0.5 };
+      });
+      if (!arr.some(function(c){ return c.current; })) arr.push({ T: state.T, m: m, label: gasName() + ' · ' + state.T + ' K', color: '#7c4dff', current: true });
+      return arr;
+    }
+    if (state.compare === 'mass') {
+      var keys = ['He', 'N2', 'O2', 'CO2'];
+      var mcol = ['#0ca678', '#1f6feb', '#f76707', '#d6336c'];
+      var arr2 = keys.map(function(k, i){
+        return { T: state.T, m: GASES[k].M * 1e-3 / NA, label: GASES[k].label, color: mcol[i], current: k === state.gas };
+      });
+      if (!arr2.some(function(c){ return c.current; })) arr2.push({ T: state.T, m: m, label: gasName(), color: '#7c4dff', current: true });
+      return arr2;
+    }
+    return [cur];
+  }
+
+  function domainFor(curves){
+    var vmax = 0;
+    curves.forEach(function(c){
+      vmax = Math.max(vmax, 3.15 * characteristic(c.T, c.m).vrms);
+    });
+    if (state.tail) vmax = Math.max(vmax, thresholdSpeed() * 1.15);
+    vmax = niceCeil(vmax);
+    var fmax = 0;
+    for (var ci = 0; ci < curves.length; ci++) {
+      var c = curves[ci];
+      for (var i = 1; i <= 320; i++) {
+        var v = vmax * i / 320;
+        var f = fMaxwell(v, c.T, c.m);
+        if (f > fmax) fmax = f;
+      }
+    }
+    return { vmax: vmax, fmax: fmax * 1.2 };
+  }
+
+  function drawCurve(ctx, c, width, alpha, color){
+    ctx.beginPath();
+    for (var i = 0; i <= 360; i++) {
+      var v = geo.vmax * i / 360;
+      var f = fMaxwell(v, c.T, c.m);
+      var x = geo.X(v), y = geo.Y(f);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = color || c.color;
+    ctx.globalAlpha = alpha == null ? 1 : alpha;
+    ctx.lineWidth = width || 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  function drawMain(){
+    if (!mainCanvas) return [];
+    var fit = fitCanvas(mainCanvas);
+    var ctx = fit.ctx, w = fit.w, h = fit.h;
+    var curves = getCurves();
+    var dom = domainFor(curves);
+    var pad = { l: 62, r: 24, t: 20, b: 44 };
+    var pw = Math.max(10, w - pad.l - pad.r);
+    var ph = Math.max(10, h - pad.t - pad.b);
+    var X = function(v){ return pad.l + clamp(v / dom.vmax, 0, 1) * pw; };
+    var Y = function(f){ return pad.t + (1 - clamp(f / dom.fmax, 0, 1)) * ph; };
+    geo = { pad: pad, pw: pw, ph: ph, vmax: dom.vmax, fmax: dom.fmax, X: X, Y: Y, w: w, h: h };
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#fbfdff';
+    ctx.fillRect(pad.l, pad.t, pw, ph);
+
+    var step = niceStep(dom.vmax, 6);
+    ctx.strokeStyle = '#e9f0f9';
+    ctx.lineWidth = 1;
+    for (var v = 0; v <= dom.vmax + 1e-6; v += step) {
+      var gx = X(v);
+      ctx.beginPath(); ctx.moveTo(gx, pad.t); ctx.lineTo(gx, pad.t + ph); ctx.stroke();
+    }
+    for (var i = 0; i <= 4; i++) {
+      var gy = pad.t + ph * i / 4;
+      ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(pad.l + pw, gy); ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#c9d7e7';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t);
+    ctx.lineTo(pad.l, pad.t + ph);
+    ctx.lineTo(pad.l + pw, pad.t + ph);
+    ctx.stroke();
+
+    ctx.fillStyle = '#65788e';
+    ctx.font = '12px ' + FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (var vt = 0; vt <= dom.vmax + 1e-6; vt += step) {
+      ctx.fillText(Math.round(vt).toLocaleString('zh-CN'), X(vt), pad.t + ph + 8);
+    }
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    var fdigits = dom.fmax >= 0.001 ? 4 : 6;
+    for (var j = 0; j <= 4; j++) {
+      var fv = dom.fmax * (1 - j / 4);
+      ctx.fillText(fv.toFixed(fdigits), pad.l - 10, pad.t + ph * j / 4);
+    }
+
+    ctx.fillStyle = '#40556b';
+    ctx.font = '600 12px ' + FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('分子速率 v (m/s)', pad.l + pw / 2, pad.t + ph + 34);
+    ctx.save();
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.font = '600 11px ' + FONT;
+    ctx.fillStyle = '#65788e';
+    ctx.fillText('f(v)', pad.l, pad.t - 6);
+    ctx.restore();
+
+    var cur = curves.filter(function(c){ return c.current; })[0] || curves[curves.length - 1];
+
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(0));
+    for (var k = 0; k <= 320; k++) {
+      var vv = dom.vmax * k / 320;
+      ctx.lineTo(X(vv), Y(fMaxwell(vv, cur.T, cur.m)));
+    }
+    ctx.lineTo(X(dom.vmax), Y(0));
+    ctx.closePath();
+    var grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ph);
+    grad.addColorStop(0, 'rgba(31,111,235,.15)');
+    grad.addColorStop(1, 'rgba(31,111,235,.01)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    curves.forEach(function(c){
+      if (!c.current) drawCurve(ctx, c, 2, 0.92);
+    });
+    drawCurve(ctx, cur, 3, 1, '#0b4fbe');
+
+    if (state.tail) {
+      var v0 = thresholdSpeed();
+      if (v0 < dom.vmax) {
+        var x0 = X(v0);
+        ctx.beginPath();
+        ctx.moveTo(x0, Y(0));
+        for (var t = 0; t <= 180; t++) {
+          var tv = v0 + (dom.vmax - v0) * t / 180;
+          ctx.lineTo(X(tv), Y(fMaxwell(tv, cur.T, cur.m)));
+        }
+        ctx.lineTo(X(dom.vmax), Y(0));
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(214,51,108,.17)';
+        ctx.fill();
+        ctx.save();
+        ctx.strokeStyle = 'rgba(214,51,108,.6)';
+        ctx.lineWidth = 1.4;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(x0, pad.t);
+        ctx.lineTo(x0, pad.t + ph);
+        ctx.stroke();
+        ctx.restore();
+        ctx.fillStyle = '#d6336c';
+        ctx.font = '600 11px ' + FONT;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('Eₐ 阈值', Math.min(x0 + 6, pad.l + pw - 52), pad.t + ph - 7);
+      }
+    }
+
+    if (state.markers) {
+      var ch = characteristic(cur.T, cur.m);
+      var marks = [
+        { v: ch.vp, c: '#1f6feb' },
+        { v: ch.vavg, c: '#0ca678' },
+        { v: ch.vrms, c: '#f76707' }
+      ];
+      marks.forEach(function(mk){
+        if (mk.v > dom.vmax) return;
+        var xx = X(mk.v);
+        ctx.save();
+        ctx.strokeStyle = mk.c;
+        ctx.globalAlpha = 0.6;
+        ctx.lineWidth = 1.3;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(xx, pad.t + 7);
+        ctx.lineTo(xx, pad.t + ph);
+        ctx.stroke();
+        ctx.restore();
+        ctx.beginPath();
+        ctx.fillStyle = mk.c;
+        ctx.arc(xx, pad.t + 7, 3.4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    if (hover && hover.x >= pad.l && hover.x <= pad.l + pw && hover.y >= pad.t && hover.y <= pad.t + ph) {
+      var hv = clamp((hover.x - pad.l) / pw * dom.vmax, 0, dom.vmax);
+      var hf = fMaxwell(hv, cur.T, cur.m);
+      var hx = X(hv), hy = Y(hf);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(11,79,190,.38)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(hx, pad.t);
+      ctx.lineTo(hx, pad.t + ph);
+      ctx.moveTo(pad.l, hy);
+      ctx.lineTo(pad.l + pw, hy);
+      ctx.stroke();
+      ctx.restore();
+      ctx.beginPath();
+      ctx.fillStyle = '#0b4fbe';
+      ctx.arc(hx, hy, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.fillStyle = '#fff';
+      ctx.arc(hx, hy, 1.7, 0, Math.PI * 2);
+      ctx.fill();
+
+      var l1 = 'v = ' + hv.toFixed(0) + ' m/s';
+      var l2 = 'f(v) = ' + hf.toFixed(5) + ' s/m';
+      ctx.font = '600 11px ' + FONT;
+      var tw = Math.max(ctx.measureText(l1).width, ctx.measureText(l2).width) + 22;
+      var tx = hx + 12, ty = hy - 52;
+      if (tx + tw > w - 8) tx = hx - tw - 12;
+      if (ty < 6) ty = hy + 12;
+      ctx.fillStyle = 'rgba(8,28,49,.94)';
+      roundRect(ctx, tx, ty, tw, 43, 8);
+      ctx.fill();
+      ctx.fillStyle = '#e8f2ff';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(l1, tx + 11, ty + 7);
+      ctx.fillStyle = '#8fc2ff';
+      ctx.fillText(l2, tx + 11, ty + 24);
+    }
+    return curves;
+  }
+
+  mainCanvas.addEventListener('pointermove', function(e){
+    if (!geo) return;
+    var r = mainCanvas.getBoundingClientRect();
+    var x = e.clientX - r.left, y = e.clientY - r.top;
+    if (x >= geo.pad.l && x <= geo.pad.l + geo.pw && y >= geo.pad.t && y <= geo.pad.t + geo.ph) {
+      hover = { x: x, y: y };
+    } else {
+      hover = null;
+    }
+    drawMain();
+  });
+  mainCanvas.addEventListener('pointerleave', function(){
+    hover = null;
+    drawMain();
+  });
+
+  /* ================= 读数与图例 ================= */
+  function updateLegend(curves){
+    var el = $('legend');
+    el.innerHTML = curves.map(function(c){
+      return '<span class="item"><i class="swatch" style="background:' + c.color + '"></i>' + c.label + (c.current ? '（当前）' : '') + '</span>';
+    }).join('');
+  }
+  function updateMarkerLegend(ch){
+    if (!state.markers) {
+      $('markerLegend').innerHTML = '<span>特征速率标注已关闭</span>';
+      return;
+    }
+    $('markerLegend').innerHTML =
+      '<span class="mk"><i style="background:#1f6feb"></i>v<sub>p</sub> <b>' + ch.vp.toFixed(0) + '</b> m/s</span>' +
+      '<span class="mk"><i style="background:#0ca678"></i>v̄ <b>' + ch.vavg.toFixed(0) + '</b> m/s</span>' +
+      '<span class="mk"><i style="background:#f76707"></i>v<sub>rms</sub> <b>' + ch.vrms.toFixed(0) + '</b> m/s</span>';
+  }
+
+  function render(){
+    var m = massKg();
+    var ch = characteristic(state.T, m);
+    $('chartState').textContent = gasName() + ' · ' + state.T + ' K';
+    $('simState').textContent = gasName() + ' · ' + state.T + ' K';
+    $('simBadge').textContent = 'T = ' + state.T + ' K · ' + gasName() + ' · 320 个分子';
+    $('simSigma').textContent = ch.sigma.toFixed(0);
+
+    var curves = drawMain();
+    updateLegend(curves);
+    updateMarkerLegend(ch);
+
+    $('statVp').textContent = ch.vp.toFixed(0);
+    $('statVavg').textContent = ch.vavg.toFixed(0);
+    $('statVrms').textContent = ch.vrms.toFixed(0);
+    $('statFpeak').textContent = fMaxwell(ch.vp, state.T, m).toFixed(5);
+
+    $('liveVp').textContent = ch.vp.toFixed(0);
+    $('liveVavg').textContent = ch.vavg.toFixed(0);
+    $('liveVrms').textContent = ch.vrms.toFixed(0);
+
+    var v0 = thresholdSpeed();
+    $('tailOut').textContent = state.tail ? fmtPercent(tailProb(v0, state.T, m)) : '—';
+
+    drawDecomp();
+  }
+
+  /* ================= 模拟 ================= */
+  var sim = {
+    canvas: $('simCanvas'),
+    hist: $('histCanvas'),
+    particles: [],
+    W: 0,
+    H: 0,
+    sigma: 300,
+    scale: 0.25,
+    counts: null,
+    bins: 48,
+    total: 0,
+    sampleAcc: 0,
+    collisionTimer: 0,
+    active: true,
+    frame: 0
+  };
+
+  function gauss(){
+    var u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+  function assignVelocity(p){
+    var s = sim.sigma;
+    var vx = gauss() * s, vy = gauss() * s, vz = gauss() * s;
+    p.vx = vx; p.vy = vy; p.vz = vz;
+    p.speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
+  }
+  function simResize(){
+    var r = sim.canvas.getBoundingClientRect();
+    var nw = Math.max(40, r.width);
+    var nh = Math.max(40, r.height);
+    if (sim.W > 0 && sim.H > 0 && (nw !== sim.W || nh !== sim.H)) {
+      var sx = nw / sim.W, sy = nh / sim.H;
+      sim.particles.forEach(function(p){
+        p.x = clamp(p.x * sx, 4, nw - 4);
+        p.y = clamp(p.y * sy, 4, nh - 4);
+      });
+    }
+    sim.W = nw;
+    sim.H = nh;
+  }
+  function simApplyCondition(){
+    simResize();
+    sim.sigma = Math.sqrt(KB * state.T / massKg());
+    sim.scale = 78 / sim.sigma;
+    if (!sim.particles.length) {
+      for (var i = 0; i < 320; i++) {
+        var p = { x: Math.random() * sim.W, y: Math.random() * sim.H };
+        assignVelocity(p);
+        sim.particles.push(p);
+      }
+    } else {
+      for (var j = 0; j < sim.particles.length; j++) assignVelocity(sim.particles[j]);
+    }
+    sim.counts = new Int32Array(sim.bins);
+    sim.total = 0;
+    sim.sampleAcc = 0;
+    sim.collisionTimer = 0;
+    $('simSamples').textContent = '0';
+    $('simCount').textContent = '样本 0';
+    drawHist();
+  }
+  function simResetStats(){
+    sim.counts = new Int32Array(sim.bins);
+    sim.total = 0;
+    sim.sampleAcc = 0;
+    $('simSamples').textContent = '0';
+    $('simCount').textContent = '样本 0';
+    drawHist();
+  }
+  function addSample(speed){
+    var vmax = 4.6 * sim.sigma;
+    var idx = Math.floor(speed / vmax * sim.bins);
+    if (idx < 0) idx = 0;
+    if (idx >= sim.bins) idx = sim.bins - 1;
+    sim.counts[idx]++;
+    sim.total++;
+  }
+  function simStep(dt){
+    if (!sim.active || !sim.particles.length) return;
+    var W = sim.W, H = sim.H, sc = sim.scale;
+    for (var i = 0; i < sim.particles.length; i++) {
+      var p = sim.particles[i];
+      p.x += p.vx * sc * dt;
+      p.y += p.vy * sc * dt;
+      if (p.x < 4) { p.x = 4; p.vx = Math.abs(p.vx); }
+      else if (p.x > W - 4) { p.x = W - 4; p.vx = -Math.abs(p.vx); }
+      if (p.y < 4) { p.y = 4; p.vy = Math.abs(p.vy); }
+      else if (p.y > H - 4) { p.y = H - 4; p.vy = -Math.abs(p.vy); }
+    }
+    sim.collisionTimer += dt;
+    if (sim.collisionTimer >= 0.8) {
+      sim.collisionTimer = 0;
+      for (var k = 0; k < 26; k++) {
+        var q = sim.particles[Math.floor(Math.random() * sim.particles.length)];
+        assignVelocity(q);
+      }
+    }
+    sim.sampleAcc += dt * 520;
+    var guard = 0;
+    while (sim.sampleAcc >= 1 && guard < 24) {
+      sim.sampleAcc -= 1;
+      guard++;
+      addSample(sim.particles[Math.floor(Math.random() * sim.particles.length)].speed);
+    }
+  }
+  function drawSimBox(){
+    var fit = fitCanvas(sim.canvas);
+    var ctx = fit.ctx, w = fit.w, h = fit.h;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(120,180,255,.055)';
+    for (var gx = 24; gx < w; gx += 34) {
+      for (var gy = 24; gy < h; gy += 34) {
+        ctx.beginPath();
+        ctx.arc(gx, gy, 0.9, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    var sm = sim.sigma;
+    ctx.globalCompositeOperation = 'lighter';
+    for (var i = 0; i < sim.particles.length; i++) {
+      var p = sim.particles[i];
+      var t = clamp(p.speed / (2.6 * sm), 0, 1);
+      var hue = 210 - 185 * t;
+      ctx.fillStyle = 'hsla(' + hue.toFixed(1) + ',95%,66%,.92)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 1.7 + 1.4 * t, 0, Math.PI * 2);
+      ctx.fill();
+      if (t > 0.55) {
+        ctx.fillStyle = 'hsla(' + hue.toFixed(1) + ',95%,66%,.12)';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  function drawHist(){
+    var fit = fitCanvas(sim.hist);
+    var ctx = fit.ctx, w = fit.w, h = fit.h;
+    ctx.clearRect(0, 0, w, h);
+    if (w < 30 || h < 30) return;
+    var pad = { l: 38, r: 12, t: 20, b: 28 };
+    var pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
+    var vmax = Math.max(500, Math.ceil(4.6 * sim.sigma / 250) * 250);
+    var binW = vmax / sim.bins;
+
+    var densities = new Array(sim.bins);
+    var ymax = fMaxwell(characteristic(state.T, massKg()).vp, state.T, massKg()) * 1.18;
+    for (var i = 0; i < sim.bins; i++) {
+      var d = sim.total > 0 ? sim.counts[i] / (sim.total * binW) : 0;
+      densities[i] = d;
+      if (d > ymax) ymax = d;
+    }
+    if (!(ymax > 0)) ymax = 0.001;
+
+    ctx.strokeStyle = 'rgba(120,180,255,.14)';
+    ctx.lineWidth = 1;
+    for (var gi = 0; gi <= 4; gi++) {
+      var gy = pad.t + ph * gi / 4;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, gy);
+      ctx.lineTo(pad.l + pw, gy);
+      ctx.stroke();
+    }
+
+    var barW = pw / sim.bins;
+    for (var bi = 0; bi < sim.bins; bi++) {
+      var bh = densities[bi] / ymax * ph;
+      if (bh <= 0) continue;
+      var xx = pad.l + bi * barW;
+      var grad = ctx.createLinearGradient(0, pad.t + ph - bh, 0, pad.t + ph);
+      grad.addColorStop(0, 'rgba(84,180,255,.92)');
+      grad.addColorStop(1, 'rgba(31,111,235,.28)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(xx + 0.8, pad.t + ph - bh, Math.max(1, barW - 1.6), bh);
+    }
+
+    ctx.beginPath();
+    for (var s = 0; s <= 220; s++) {
+      var v = vmax * s / 220;
+      var f = fMaxwell(v, state.T, massKg());
+      var px = pad.l + v / vmax * pw;
+      var py = pad.t + ph - f / ymax * ph;
+      if (s === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = '#ffb454';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    ctx.fillStyle = '#8fb0d2';
+    ctx.font = '10px ' + FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (var ti = 0; ti <= 3; ti++) {
+      var tv = vmax * ti / 3;
+      ctx.fillText(Math.round(tv).toLocaleString('zh-CN'), pad.l + pw * ti / 3, pad.t + ph + 7);
+    }
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#9db8d2';
+    ctx.font = '600 10px ' + FONT;
+    ctx.fillText('概率密度', pad.l, 5);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#ffb454';
+    ctx.fillText('理论曲线', pad.l + pw, 5);
+  }
+
+  var lastTime = performance.now();
+  function loop(now){
+    var dt = Math.min(0.04, Math.max(0, (now - lastTime) / 1000));
+    lastTime = now;
+    if (sim.active && sim.particles.length) {
+      simStep(dt);
+      drawSimBox();
+      sim.frame++;
+      if (sim.frame % 6 === 0) {
+        drawHist();
+        var txt = sim.total.toLocaleString('zh-CN');
+        $('simSamples').textContent = txt;
+        $('simCount').textContent = '样本 ' + txt;
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ sim.active = en.isIntersecting; });
+    }, { threshold: 0.02 });
+    io.observe($('sim'));
+  }
+  $('simReset').addEventListener('click', simResetStats);
+
+  /* ================= 形状分解 ================= */
+  function drawDecomp(){
+    var cv = $('decompCanvas');
+    if (!cv) return;
+    var r = cv.getBoundingClientRect();
+    if (r.width < 20) return;
+    var fit = fitCanvas(cv);
+    var ctx = fit.ctx, w = fit.w, h = fit.h;
+    ctx.clearRect(0, 0, w, h);
+    var pad = { l: 46, r: 18, t: 16, b: 30 };
+    var pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
+    var m = massKg(), T = state.T;
+    var sigma = Math.sqrt(KB * T / m);
+    var vmax = 3.4 * sigma;
+    var X = function(v){ return pad.l + v / vmax * pw; };
+    var Y = function(y){ return pad.t + (1 - y / 1.08) * ph; };
+
+    ctx.strokeStyle = '#e9f0f9';
+    for (var i = 0; i <= 4; i++) {
+      var gy = pad.t + ph * i / 4;
+      ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(pad.l + pw, gy); ctx.stroke();
+    }
+    ctx.strokeStyle = '#c9d7e7';
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t);
+    ctx.lineTo(pad.l, pad.t + ph);
+    ctx.lineTo(pad.l + pw, pad.t + ph);
+    ctx.stroke();
+
+    var pmax = 2 * Math.exp(-1);
+    function plot(fn, color, width, dash){
+      ctx.beginPath();
+      for (var s = 0; s <= 240; s++) {
+        var v = vmax * s / 240;
+        var y = fn(v / sigma);
+        var px = pad.l + s / 240 * pw;
+        var py = Y(y);
+        if (s === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.setLineDash(dash || []);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    plot(function(x){ return Math.min(1.04, x * x / 11.56); }, '#7c4dff', 1.8, [5, 4]);
+    plot(function(x){ return Math.exp(-x * x / 2); }, '#f76707', 1.8, [5, 4]);
+    plot(function(x){ return (x * x * Math.exp(-x * x / 2)) / pmax; }, '#0b4fbe', 2.6);
+
+    var xp = Math.sqrt(2);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(11,79,190,.35)';
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(X(xp * sigma), pad.t);
+    ctx.lineTo(X(xp * sigma), pad.t + ph);
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = '#65788e';
+    ctx.font = '10px ' + FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('0', pad.l, pad.t + ph + 7);
+    ctx.fillText('v', pad.l + pw, pad.t + ph + 7);
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('1', pad.l - 7, Y(1));
+    ctx.fillText('0', pad.l - 7, Y(0));
+  }
+
+  /* ================= 同位素小图 ================= */
+  function drawIsotope(){
+    var cv = $('isoCanvas');
+    if (!cv) return;
+    var r = cv.getBoundingClientRect();
+    if (r.width < 20) return;
+    var fit = fitCanvas(cv);
+    var ctx = fit.ctx, w = fit.w, h = fit.h;
+    ctx.clearRect(0, 0, w, h);
+    var T = 300;
+    var m1 = 349.0 * 1e-3 / NA;
+    var m2 = 352.0 * 1e-3 / NA;
+    var pad = { l: 30, r: 8, t: 12, b: 22 };
+    var pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
+    var vmax = 400;
+    var c1 = characteristic(T, m1), c2 = characteristic(T, m2);
+    var fmax = fMaxwell(c1.vp, T, m1) * 1.15;
+    var X = function(v){ return pad.l + v / vmax * pw; };
+    var Y = function(f){ return pad.t + (1 - f / fmax) * ph; };
+
+    ctx.strokeStyle = '#e9f0f9';
+    for (var i = 0; i <= 3; i++) {
+      var gy = pad.t + ph * i / 3;
+      ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(pad.l + pw, gy); ctx.stroke();
+    }
+    ctx.strokeStyle = '#c9d7e7';
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t);
+    ctx.lineTo(pad.l, pad.t + ph);
+    ctx.lineTo(pad.l + pw, pad.t + ph);
+    ctx.stroke();
+
+    function curve(mass, color, width, dash){
+      ctx.beginPath();
+      for (var s = 0; s <= 200; s++) {
+        var v = vmax * s / 200;
+        var f = fMaxwell(v, T, mass);
+        var px = X(v), py = Y(f);
+        if (s === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width || 1.8;
+      ctx.setLineDash(dash || []);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    curve(m1, '#0ca678', 2.2);
+    curve(m2, '#f76707', 1.7, [4, 3]);
+
+    ctx.fillStyle = '#7a8da1';
+    ctx.font = '9px ' + FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('0', pad.l, pad.t + ph + 5);
+    ctx.fillText('200', pad.l + pw / 2, pad.t + ph + 5);
+    ctx.fillText('400 m/s', pad.l + pw, pad.t + ph + 5);
+
+    var iw = Math.max(110, w * 0.46);
+    var ih = Math.max(64, h * 0.56);
+    var ix = w - iw - 6, iy = 6;
+    ctx.fillStyle = 'rgba(251,253,255,.96)';
+    roundRect(ctx, ix, iy, iw, ih, 7);
+    ctx.fill();
+    ctx.strokeStyle = '#d8e6f6';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    var zx0 = 117.6, zx1 = 120.4;
+    var IX = function(v){ return ix + 10 + (v - zx0) / (zx1 - zx0) * (iw - 20); };
+    var baseline = iy + ih * 0.64;
+    var p1x = IX(c1.vp), p2x = IX(c2.vp);
+
+    ctx.strokeStyle = '#dbe6f3';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(ix + 8, baseline);
+    ctx.lineTo(ix + iw - 8, baseline);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#0ca678';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(p1x, baseline - 9);
+    ctx.lineTo(p1x, baseline + 9);
+    ctx.stroke();
+    ctx.strokeStyle = '#f76707';
+    ctx.setLineDash([3, 2]);
+    ctx.beginPath();
+    ctx.moveTo(p2x, baseline - 9);
+    ctx.lineTo(p2x, baseline + 9);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.beginPath(); ctx.fillStyle = '#0ca678'; ctx.arc(p1x, baseline - 9, 2.1, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.fillStyle = '#f76707'; ctx.arc(p2x, baseline - 9, 2.1, 0, Math.PI * 2); ctx.fill();
+
+    var ay = baseline - 22;
+    ctx.strokeStyle = '#8a9bad';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(p2x, ay); ctx.lineTo(p1x, ay);
+    ctx.moveTo(p2x, ay - 2); ctx.lineTo(p2x, ay + 2);
+    ctx.moveTo(p1x, ay - 2); ctx.lineTo(p1x, ay + 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#7a8da1';
+    ctx.font = '7.5px ' + FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('Δv ≈ 0.43%', (p1x + p2x) / 2, ay - 3);
+    ctx.textBaseline = 'top';
+    ctx.fillText('²³⁵', p1x, baseline + 11);
+    ctx.fillText('²³⁸', p2x, baseline + 11);
+    ctx.fillStyle = '#8a9bad';
+    ctx.font = '8px ' + FONT;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('峰位位置（放大示意）', ix + 5, iy + 3);
+  }
+
+  /* ================= 分解图 & 同位素重绘 ================= */
+  window.addEventListener('resize', function(){
+    clearTimeout(window.__rz);
+    window.__rz = setTimeout(function(){
+      simResize();
+      drawHist();
+      drawMain();
+      drawDecomp();
+      drawIsotope();
+      if (window.innerWidth <= 1020 && stepItems[stepIndex]) {
+        stepItems[stepIndex].scrollIntoView({ block: 'nearest', inline: 'center' });
+      }
+    }, 120);
+  });
+
+  /* ================= 推导步骤 ================= */
+  var steps = Array.prototype.slice.call(document.querySelectorAll('.step'));
+  var stepItems = Array.prototype.slice.call(document.querySelectorAll('#stepList li'));
+  var stepIndex = 0;
+  function showStep(i){
+    stepIndex = clamp(i, 0, steps.length - 1);
+    steps.forEach(function(s, k){ s.classList.toggle('active', k === stepIndex); });
+    stepItems.forEach(function(li, k){ li.classList.toggle('active', k === stepIndex); });
+    $('stepNow').textContent = stepIndex + 1;
+    $('stepTotal').textContent = steps.length;
+    $('stepBar').style.width = ((stepIndex + 1) / steps.length * 100).toFixed(2) + '%';
+    $('prevStep').disabled = stepIndex === 0;
+    $('nextStep').disabled = stepIndex === steps.length - 1;
+    if (stepIndex === steps.length - 1) drawDecomp();
+    if (window.innerWidth <= 1020 && stepItems[stepIndex]) {
+      stepItems[stepIndex].scrollIntoView({ block: 'nearest', inline: 'center' });
+    }
+  }
+  $('prevStep').addEventListener('click', function(){ showStep(stepIndex - 1); });
+  $('nextStep').addEventListener('click', function(){ showStep(stepIndex + 1); });
+  stepItems.forEach(function(li){
+    li.addEventListener('click', function(){ showStep(parseInt(li.dataset.go, 10)); });
+  });
+
+  /* ================= 控件联动 ================= */
+  function syncControls(){
+    $('temp').value = state.T;
+    $('tempOut').textContent = state.T;
+    $('gas').value = state.gas;
+    $('customMass').value = state.customMass;
+    $('customOut').textContent = state.customMass.toFixed(1) + ' g/mol';
+    $('customWrap').hidden = state.gas !== 'custom';
+    $('massOut').textContent = molarMass().toFixed(1) + ' g/mol';
+    document.querySelectorAll('#compareSeg button').forEach(function(b){
+      b.classList.toggle('active', b.dataset.mode === state.compare);
+    });
+    $('markers').checked = state.markers;
+    $('tail').checked = state.tail;
+    $('threshold').value = state.threshold;
+    $('threshold').disabled = !state.tail;
+    $('thresholdOut').textContent = state.threshold;
+    $('thresholdGroup').classList.toggle('is-off', !state.tail);
+    updateSliderFill($('temp'));
+    updateSliderFill($('threshold'));
+    updateSliderFill($('customMass'));
+  }
+
+  var demo = { active: false, raf: null, start: 0, frame: 0 };
+  function stopDemo(){
+    if (!demo.active) return;
+    demo.active = false;
+    if (demo.raf) cancelAnimationFrame(demo.raf);
+    demo.raf = null;
+    $('demoBtn').textContent = '▶ 自动演示';
+    $('demoBtn').classList.remove('active');
+    simApplyCondition();
+  }
+  function startDemo(){
+    demo.active = true;
+    demo.start = performance.now();
+    demo.frame = 0;
+    $('demoBtn').textContent = '■ 停止演示';
+    $('demoBtn').classList.add('active');
+    function tick(now){
+      if (!demo.active) return;
+      var phase = (1 - Math.cos((now - demo.start) / 6200 * Math.PI * 2)) / 2;
+      state.T = Math.round(80 + phase * (1200 - 80));
+      $('temp').value = state.T;
+      $('tempOut').textContent = state.T;
+      updateSliderFill($('temp'));
+      render();
+      demo.frame++;
+      if (demo.frame % 10 === 0) {
+        sim.sigma = Math.sqrt(KB * state.T / massKg());
+        sim.scale = 78 / sim.sigma;
+        sim.particles.forEach(assignVelocity);
+      }
+      demo.raf = requestAnimationFrame(tick);
+    }
+    demo.raf = requestAnimationFrame(tick);
+  }
+  $('demoBtn').addEventListener('click', function(){
+    if (demo.active) stopDemo(); else startDemo();
+  });
+
+  $('temp').addEventListener('input', function(){
+    stopDemo();
+    state.T = parseInt($('temp').value, 10);
+    $('tempOut').textContent = state.T;
+    updateSliderFill($('temp'));
+    render();
+  });
+  $('temp').addEventListener('change', simApplyCondition);
+
+  $('gas').addEventListener('change', function(){
+    stopDemo();
+    state.gas = $('gas').value;
+    $('customWrap').hidden = state.gas !== 'custom';
+    $('massOut').textContent = molarMass().toFixed(1) + ' g/mol';
+    render();
+    simApplyCondition();
+  });
+  $('customMass').addEventListener('input', function(){
+    stopDemo();
+    state.gas = 'custom';
+    $('gas').value = 'custom';
+    state.customMass = parseFloat($('customMass').value);
+    $('customOut').textContent = state.customMass.toFixed(1) + ' g/mol';
+    $('massOut').textContent = molarMass().toFixed(1) + ' g/mol';
+    updateSliderFill($('customMass'));
+    render();
+  });
+  $('customMass').addEventListener('change', simApplyCondition);
+
+  document.querySelectorAll('#compareSeg button').forEach(function(b){
+    b.addEventListener('click', function(){
+      state.compare = b.dataset.mode;
+      document.querySelectorAll('#compareSeg button').forEach(function(x){
+        x.classList.toggle('active', x === b);
+      });
+      render();
+    });
+  });
+  $('markers').addEventListener('change', function(){
+    state.markers = $('markers').checked;
+    render();
+  });
+  $('tail').addEventListener('change', function(){
+    state.tail = $('tail').checked;
+    $('threshold').disabled = !state.tail;
+    $('thresholdGroup').classList.toggle('is-off', !state.tail);
+    render();
+  });
+  $('threshold').addEventListener('input', function(){
+    state.threshold = parseInt($('threshold').value, 10);
+    $('thresholdOut').textContent = state.threshold;
+    updateSliderFill($('threshold'));
+    render();
+  });
+
+  document.querySelectorAll('[data-temp]').forEach(function(b){
+    b.addEventListener('click', function(){
+      stopDemo();
+      state.T = parseInt(b.dataset.temp, 10);
+      $('temp').value = state.T;
+      $('tempOut').textContent = state.T;
+      updateSliderFill($('temp'));
+      render();
+      simApplyCondition();
+    });
+  });
+
+  $('resetBtn').addEventListener('click', function(){
+    stopDemo();
+    state.T = 300;
+    state.gas = 'N2';
+    state.customMass = 32;
+    state.compare = 'none';
+    state.markers = true;
+    state.tail = false;
+    state.threshold = 30;
+    syncControls();
+    render();
+    simApplyCondition();
+  });
+
+  var scenarios = {
+    evap: { T: 373, gas: 'H2O', tail: true, threshold: 44, compare: 'none', markers: true },
+    atmosphere: { T: 1000, gas: 'He', tail: false, threshold: 30, compare: 'none', markers: true },
+    reaction: { T: 900, gas: 'N2', tail: true, threshold: 50, compare: 'none', markers: true },
+    cold: { T: 50, gas: 'He', tail: false, threshold: 30, compare: 'temperature', markers: true }
+  };
+  document.querySelectorAll('[data-scenario]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var sc = scenarios[btn.dataset.scenario];
+      if (!sc) return;
+      stopDemo();
+      state.T = sc.T;
+      state.gas = sc.gas;
+      state.tail = sc.tail;
+      state.threshold = sc.threshold;
+      state.compare = sc.compare;
+      state.markers = sc.markers;
+      syncControls();
+      render();
+      simApplyCondition();
+      $('lab').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  /* ================= 启动 ================= */
+  syncControls();
+  showStep(0);
+  render();
+  simApplyCondition();
+  drawIsotope();
+  requestAnimationFrame(loop);
+
+  // 字体加载后重绘一次，避免首帧字体度量误差
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function(){
+      drawMain();
+      drawDecomp();
+      drawIsotope();
+    });
+  }
+})();
+</script>
+</body>
+</html>
